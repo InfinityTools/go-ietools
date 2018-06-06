@@ -7,6 +7,7 @@ package buffers
 import (
   "bytes"
   "compress/zlib"
+  "encoding/binary"
   "io"
   "io/ioutil"
 
@@ -152,44 +153,43 @@ func (b *Buffer) ClearModified() {
 // GetUint8 returns the unsigned byte value at the specified offset.
 // Operation is skipped if error state is set.
 func (b *Buffer) GetUint8(offset int) uint8 {
-  return uint8(b.GetInt8(offset))
+  if b.err != nil { return 0 }
+  if offset < 0 || offset >= len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return 0 }
+  return b.buf[offset]
 }
 
 // GetInt8 returns the signed byte value at the specified offset.
 // Operation is skipped if error state is set.
 func (b *Buffer) GetInt8(offset int) int8 {
-  if b.err != nil { return 0 }
-  if offset < 0 || offset >= len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return 0 }
-  return int8(b.buf[offset])
+  return int8(b.GetUint8(offset))
 }
 
 // GetUint16 returns the unsigned short value at the specified offset.
 // Operation is skipped if error state is set.
 func (b *Buffer) GetUint16(offset int) uint16 {
-  return uint16(b.GetInt16(offset))
+  if b.err != nil { return 0 }
+  if offset < 0 || offset + 2 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return 0 }
+  return binary.LittleEndian.Uint16(b.buf[offset:])
 }
 
 // GetInt16 returns the signed short value at the specified offset.
 // Operation is skipped if error state is set.
 func (b *Buffer) GetInt16(offset int) int16 {
-  if b.err != nil { return 0 }
-  if offset < 0 || offset + 2 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return 0 }
-  return int16(b.buf[offset+1]) << 8 | int16(b.buf[offset]) & 0xff
+  return int16(b.GetUint16(offset))
 }
 
 // GetUint32 returns the unsigned long value at the specified offset.
 // Operation is skipped if error state is set.
 func (b *Buffer) GetUint32(offset int) uint32 {
-  return uint32(b.GetInt32(offset))
+  if b.err != nil { return 0 }
+  if offset < 0 || offset + 4 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return 0 }
+  return binary.LittleEndian.Uint32(b.buf[offset:])
 }
 
 // GetInt32 returns the signed long value at the specified offset.
 // Operation is skipped if error state is set.
 func (b *Buffer) GetInt32(offset int) int32 {
-  if b.err != nil { return 0 }
-  if offset < 0 || offset + 4 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return 0 }
-  return int32(b.buf[offset+3]) << 24 | (int32(b.buf[offset+2]) & 0xff) << 16 | 
-         (int32(b.buf[offset+1]) & 0xff) << 8 | int32(b.buf[offset]) & 0xff
+  return int32(b.GetUint32(offset))
 }
 
 // GetUint returns the value at the specified offset in native uint type.
@@ -254,69 +254,64 @@ func (b *Buffer) GetBuffer(offset, size int) []byte {
 // PutUInt8 writes the given unsigned byte value at the specified offset and returns the previous value.
 // Operation is skipped if error state is set.
 func (b *Buffer) PutUint8(offset int, value uint8) uint8 {
-  return uint8(b.PutInt8(offset, int8(value)))
+  var retVal uint8 = 0
+  if b.err != nil { return retVal }
+  if offset < 0 || offset >= len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return retVal }
+
+  retVal = uint8(b.buf[offset])
+  if retVal != value {
+    b.buf[offset] = byte(value)
+    b.dirty = true
+  }
+  return retVal
 }
 
 // PutInt8 writes the given signed byte value at the specified offset and returns the previous value.
 // Operation is skipped if error state is set.
 func (b *Buffer) PutInt8(offset int, value int8) int8 {
-  var retVal int8 = 0
-  if b.err != nil { return retVal }
-  if offset < 0 || offset >= len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return retVal }
-
-  if b.GetInt8(offset) != value {
-    retVal = int8(b.buf[offset])
-    b.buf[offset] = byte(value)
-    if retVal != value { b.dirty = true }
-  }
-  return retVal
+  return int8(b.PutUint8(offset, uint8(value)))
 }
 
 // PutUInt16 writes the given unsigned short value at the specified offset and returns the previous value.
 // Operation is skipped if error state is set.
 func (b *Buffer) PutUint16(offset int, value uint16) uint16 {
-  return uint16(b.PutInt16(offset, int16(value)))
+  var retVal uint16 = 0
+  if b.err != nil { return retVal }
+  if offset < 0 || offset + 2 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return retVal }
+
+  retVal = binary.LittleEndian.Uint16(b.buf[offset:])
+  if retVal != value {
+    binary.LittleEndian.PutUint16(b.buf[offset:], value)
+    b.dirty = true
+  }
+  return retVal
 }
 
 // PutInt16 writes the given signed short value at the specified offset and returns the previous value.
 // Operation is skipped if error state is set.
 func (b *Buffer) PutInt16(offset int, value int16) int16 {
-  var retVal int16 = 0
-  if b.err != nil { return retVal }
-  if offset < 0 || offset + 2 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return retVal }
-
-  if b.GetInt16(offset) != value {
-    retVal = int16(b.buf[offset+1]) << 8 | int16(b.buf[offset])
-    b.buf[offset] = byte(value)
-    b.buf[offset+1] = byte(value >> 8)
-    if retVal != value { b.dirty = true }
-  }
-  return retVal
+  return int16(b.PutUint16(offset, uint16(value)))
 }
 
 // PutInt32 writes the given unsigned long value at the specified offset and returns the previous value.
 // Operation is skipped if error state is set.
 func (b *Buffer) PutUint32(offset int, value uint32) uint32 {
-  return uint32(b.PutInt32(offset, int32(value)))
+  var retVal uint32 = 0
+  if b.err != nil { return retVal }
+  if offset < 0 || offset + 4 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return retVal }
+
+  retVal = binary.LittleEndian.Uint32(b.buf[offset:])
+  if retVal != value {
+    binary.LittleEndian.PutUint32(b.buf[offset:], value)
+    b.dirty = true
+  }
+  return retVal
 }
 
 // PutInt32 writes the given signed long value at the specified offset and returns the previous value.
 // Operation is skipped if error state is set.
 func (b *Buffer) PutInt32(offset int, value int32) int32 {
-  var retVal int32 = 0
-  if b.err != nil { return retVal }
-  if offset < 0 || offset + 4 > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return retVal }
-
-  if b.GetInt32(offset) != value {
-    retVal = int32(b.buf[offset+3]) << 24 | int32(b.buf[offset+2]) << 16 |
-             int32(b.buf[offset+1]) << 8 | int32(b.buf[offset])
-    b.buf[offset] = byte(value)
-    b.buf[offset+1] = byte(value >> 8)
-    b.buf[offset+2] = byte(value >> 16)
-    b.buf[offset+3] = byte(value >> 24)
-    if retVal != value { b.dirty = true }
-  }
-  return retVal
+  return int32(b.PutUint32(offset, uint32(value)))
 }
 
 // PutString writes the given string at the specified offset.
