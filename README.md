@@ -11,7 +11,7 @@ Package *ietools* contains several helpful constants and functions that are used
 
 Package *buffers* contains a set of functions for reading, creating or modifying structured resources. It is loosely based on a subset of functions provided by [WeiDU](http://www.weidu.org/%7Ethebigg/README-WeiDU.html). The package has no external dependencies.
 
-Package *pvrz* implements a high-level PVR/PVRZ texture manager. External dependencies: `github.com/InfinityTools/squish` (see [go-squish](http://github.com/InfinityTools/squish) for more information).
+Package *pvrz* implements a high-level PVR/PVRZ texture manager. External dependencies: `github.com/InfinityTools/squish` (see [go-squish](http://github.com/InfinityTools/go-squish) for more information).
 
 Package *tables* allows you to read and modify table-like content in text format, such as 2DA or IDS. Functionality has also been inspired by WeiDU. External dependencies: `golang.org/x/text/encoding/charmap`.
 
