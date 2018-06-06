@@ -1,5 +1,5 @@
 # Go-Infinity-Tools
-*Collection of functions for modifying resources of Infinity Engine games, written in Go.*
+[![GoDoc](https://godoc.org/github.com/InfinityTools/go-ietools?status.svg)](https://godoc.org/github.com/InfinityTools/go-ietools)
 
 ## About
 
@@ -20,6 +20,16 @@ Package *tables* allows you to read and modify table-like content in text format
 *go-infinity-tools* package path is `github.com/InfinityTools/ietools`. Main package and each sub-package can be built via `go build`.
 
 You may have to specify additional options, e.g. via `CGO_LDFLAGS` environment variable, to compile the *pvrz* package.
+
+## Documentation
+
+For *ietools* docs, see https://godoc.org/github.com/InfinityTools/go-ietools .
+
+For *buffers* docs, see https://godoc.org/github.com/InfinityTools/go-ietools/buffers .
+
+For *pvrz* docs, see https://godoc.org/github.com/InfinityTools/go-ietools/pvrz .
+
+For *tables* docs, see https://godoc.org/github.com/InfinityTools/go-ietools/tables .
 
 ## License
 
