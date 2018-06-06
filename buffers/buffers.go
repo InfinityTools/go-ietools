@@ -12,6 +12,7 @@ import (
   "io/ioutil"
 
   "github.com/InfinityTools/go-ietools"
+  "golang.org/x/text/encoding/charmap"
 )
 
 // Predefined argument lists for function GetOffsetArray()
@@ -208,7 +209,7 @@ func (b *Buffer) GetUint(offset, bitsize int) uint {
 }
 
 // GetInt returns the value at the specified offset in native int type.
-// 
+//
 // bitsize specifies the size of the value to read in bits and supports 8, 16 and 32 to return a signed byte,
 // short and long value respectively. Operation is skipped if error state is set.
 func (b *Buffer) GetInt(offset, bitsize int) int {
@@ -222,22 +223,41 @@ func (b *Buffer) GetInt(offset, bitsize int) int {
   }
 }
 
-// GetString returns a string of given size from the specified offset.
+// GetString returns a string of given size (in bytes) from the specified offset.
 //
-// If "null" is true, then string stops at the first null-character. Operation is skipped if error state is set.
+// If "null" is true, then string stops at the first null-character.
+// Text encoding is assumed to be ANSI Windows-1252.
+// Operation is skipped if error state is set.
 func (b *Buffer) GetString(offset, size int, null bool) string {
+  return b.GetStringEx(offset, size, null, charmap.Windows1252)
+}
+
+// GetStringEx returns a string of given size (in bytes) from the specified offset.
+//
+// If "null" is true, then string stops at the first null-character.
+// Text encoding is specified by cmap. Specify a nil charmap to skip the ANSI decoding operation and read
+// raw utf-8 data. Operation is skipped if error state is set.
+func (b *Buffer) GetStringEx(offset, size int, null bool, cmap *charmap.Charmap) string {
   if b.err != nil { return "" }
   if size <= 0 { return "" }
   if offset < 0 || offset + size > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return "" }
 
+  buf := b.buf[offset:offset+size]
   if null {
     for idx := 0; idx < size; idx++ {
       if b.buf[offset+idx] == 0 {
-        return string(b.buf[offset:offset+idx])
+        buf = b.buf[offset:offset+idx]
+        break
       }
     }
   }
-  return string(b.buf[offset:offset+size])
+  var s string
+  if cmap != nil {
+    s, b.err = ietools.AnsiToUtf8(buf, cmap)
+  } else {
+    s = string(buf)
+  }
+  return s
 }
 
 // GetBuffer returns a copy of the specified content region.
@@ -317,13 +337,30 @@ func (b *Buffer) PutInt32(offset int, value int32) int32 {
 // PutString writes the given string at the specified offset.
 //
 // Only the specified number of charaters will be written. Remaining space in the buffer will be filled with 0.
+// Text encoding of is assumed to be ANSI Windows-1252.
 // Operation is skipped if error state is set.
 func (b *Buffer) PutString(offset, size int, value string) {
+  b.PutStringEx(offset, size, value, charmap.Windows1252)
+}
+
+// PutStringEx writes the given string at the specified offset.
+//
+// Only the specified number of charaters will be written. Remaining space in the buffer will be filled with 0.
+// Text encoding is specified by cmap. Specify a nil charmap to skip the ANSI encoding operation and write
+// raw utf-8 data data. Operation is skipped if error state is set.
+func (b *Buffer) PutStringEx(offset, size int, value string, cmap *charmap.Charmap) {
   if b.err != nil { return }
   if size <= 0 { return }
   if offset < 0 || offset + size > len(b.buf) { b.err = ietools.ErrOffsetOutOfRange; return }
 
-  buf := []byte(value)
+  var buf []byte
+  if cmap != nil {
+    buf, b.err = ietools.Utf8ToAnsi(value, cmap)
+    if b.err != nil { return }
+  } else {
+    buf = []byte(value)
+  }
+
   equal := true
   for idx := 0; equal && idx < len(buf); idx++ {
     equal = (buf[idx] == b.buf[offset+idx])
