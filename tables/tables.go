@@ -30,7 +30,7 @@ func Load(r io.Reader) *Table {
   return LoadEx(r, charmap.Windows1252)
 }
 
-// LoadEx uses the given Reader to load table data from the underlying buffer, using the specified character map for ANSI decoding. 
+// LoadEx uses the given Reader to load table data from the underlying buffer, using the specified character map for ANSI decoding.
 //
 // Specify a nil charmap to skip the decoding operation. The function returns a pointer to the Table object.
 // Use function Error to check if the Load function returned successfully.
@@ -63,7 +63,7 @@ func (t *Table) Save(w io.Writer, prettify bool) {
   t.SaveEx(w, t.cmap, prettify)
 }
 
-// SaveEx writes the current table content to the specified Writer, using the specified character map for ANSI encoding. 
+// SaveEx writes the current table content to the specified Writer, using the specified character map for ANSI encoding.
 //
 // Specify a nil charmap to skip the encoding operation. Does nothing if the Table is in an invalid state (see Error function).
 // Set prettify to ensure that table data is properly aligned.

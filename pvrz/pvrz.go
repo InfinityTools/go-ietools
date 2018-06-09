@@ -1,5 +1,5 @@
 /*
-Package pvrz provides functionality to deal with data of the PVR and PVRZ formats. 
+Package pvrz provides functionality to deal with data of the PVR and PVRZ formats.
 It has been optimized for use in Enhanced Edition games based on the Infinity Engine.
 */
 package pvrz
@@ -82,7 +82,7 @@ type Pvr struct {
 }
 
 
-// CreateNew initializes a new Pvr object with an empty pixel buffer of specified dimension. 
+// CreateNew initializes a new Pvr object with an empty pixel buffer of specified dimension.
 //
 // pixelType defines the pixel compression type applied when using the Save() function.
 //

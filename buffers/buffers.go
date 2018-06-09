@@ -1,5 +1,5 @@
 /*
-Package buffers provides a collection of types, constants and functions for manipulating data buffers, 
+Package buffers provides a collection of types, constants and functions for manipulating data buffers,
 inspired by WeiDU's set of functions.
 */
 package buffers
@@ -394,7 +394,7 @@ func (b *Buffer) PutBuffer(offset int, buf []byte) {
 
 // ReplaceBuffer replaces the current byte array with the given array.
 //
-// The operation automatically resets any invalid state (see Error() function) and marks the 
+// The operation automatically resets any invalid state (see Error() function) and marks the
 // Buffer object as modified. Specifying a nil array assigns an empty byte array.
 func (b *Buffer) ReplaceBuffer(buf []byte) {
   if buf == nil { buf = make([]byte, 0) }
@@ -528,7 +528,7 @@ func (b *Buffer) CompressInto(offset, size, level int, buffer []byte) []byte {
   return buffer
 }
 
-// CompressReplace attempts to zlib compress the buffer region specified by offset and size using compression rate "level" 
+// CompressReplace attempts to zlib compress the buffer region specified by offset and size using compression rate "level"
 // which can be anything between 0 and 9.
 //
 // Special compression levels -2 (deflate only) and -1 (default compression) are also accepted.
