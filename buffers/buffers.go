@@ -88,7 +88,7 @@ func Create() *Buffer {
 // As the Buffer takes ownership over the byte array, it is not advisable to make manual changes to the array afterwards.
 // Wrap(nil) is functionally identical with Create().
 func Wrap(buf []byte) *Buffer {
-  if buf == nil { buf = make([]byte, 256) }
+  if buf == nil { buf = make([]byte, 0, 256) }
   buffer := Buffer { buf: buf, dirty: false, err: nil }
   return &buffer
 }
